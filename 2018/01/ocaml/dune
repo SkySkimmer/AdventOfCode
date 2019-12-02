@@ -1,0 +1,5 @@
+(executable (name main))
+
+(rule (alias runme)
+ (deps input.txt)
+ (action (run ./main.exe)))
