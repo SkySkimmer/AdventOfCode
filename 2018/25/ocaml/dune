@@ -1,0 +1,7 @@
+(executable (name main)
+ (flags :standard -rectypes)
+ (libraries coq.clib))
+
+(rule (alias runme)
+ (deps input.txt)
+ (action (run ./main.exe)))
