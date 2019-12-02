@@ -1,5 +1,13 @@
-(executable (name main))
+(executable (name mainA)
+ (modules MainA))
 
-(rule (alias runme)
+(rule (alias runA)
  (deps input.txt)
- (action (run ./main.exe)))
+ (action (run ./mainA.exe)))
+
+(executable (name mainB)
+ (modules MainB))
+
+(rule (alias runB)
+ (deps input.txt)
+ (action (run ./mainB.exe)))
