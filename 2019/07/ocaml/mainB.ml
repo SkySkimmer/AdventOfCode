@@ -14,21 +14,25 @@ let start_state =
 
 let () = debug "%d cells\n" (Array.length start_state)
 
-type state = { mem : int array; self : int; mutable pc : int;
-               input : int Queue.t; }
+type status = Ready | Waiting | Done
 
-let reset_state self =
+type state = { mem : int array; pid : int; mutable pc : int; mutable status : status;
+               input : int Queue.t; mutable last_output : int option; }
+
+let reset_state pid =
   { mem = Array.copy start_state;
-    self;
+    pid;
+    status = Ready;
     pc = 0;
-    input = Queue.create (); }
+    input = Queue.create ();
+    last_output = None;}
 
 let states = Array.init 5 reset_state
 
 let state_mod i = states.(i mod Array.length states)
 
-let reset_states () = Array.iteri (fun self _ ->
-    states.(self) <- reset_state self)
+let reset_states () = Array.iteri (fun pid _ ->
+    states.(pid) <- reset_state pid)
     states
 
 let incr_pc state = state.pc <- state.pc + 1
@@ -112,15 +116,16 @@ let do_mult state modes =
   setm state modes (a * b)
 
 let do_input state modes =
-  let v = try Queue.take state.input
-    with Queue.Empty -> abort "insufficient input at pc %d for %d\n" state.pc state.self
-  in
-  setm state modes v
+  match Queue.take state.input with
+  | exception Queue.Empty -> ignore (popmode modes); state.status <- Waiting; state.pc <- state.pc - 1
+  | v -> setm state modes v
 
 let do_output state modes =
   let v = getm state modes in
-  let target = (state_mod (state.self + 1)).input in
-  Queue.add v target
+  state.last_output <- Some v;
+  let target = state_mod (state.pid + 1) in
+  Queue.add v target.input;
+  target.status <- Ready
 
 let do_jumpnz state modes =
   let v = getm state modes in
@@ -144,14 +149,17 @@ let do_eq state modes =
   let v = if a = b then 1 else 0 in
   setm state modes v
 
+let do_exit state _modes =
+  state.status <- Done
+
 let finish () =
   try Queue.take states.(0).input
   with Queue.Empty -> abort "missing final input"
 
-let rec run i =
-  let state = states.(i) in
+(* run until we need more input *)
+let rec run state =
   let pc = state.pc in (* for error reporting *)
-  debug "prep to exec at %d in %d\n" pc i;
+  debug "prep to exec at %d in %d\n" pc state.pid;
   let modes, code = parse_opcode state (get state ~mode:Immediate) in
   debug "exec %s\n" (string_of_op code);
   let modes = ref modes in
@@ -164,14 +172,28 @@ let rec run i =
   | JumpZ -> do_jumpz
   | Lt -> do_lt
   | Eq -> do_eq
-  | Exit -> fun _ _ -> ()
+  | Exit -> do_exit
   in
   exec state modes;
   abort_unless (!modes = []) "too many modes at pc %d\n" pc;
-  if code = Exit && i+1 = Array.length states then finish ()
-  else
-    let i = if code = Exit || code = Output then (i+1) mod Array.length states else i in
-    run i
+  if state.status = Ready then run state
+
+let find_ready () =
+  let rec aux i =
+    if states.(i).status = Ready then states.(i)
+    else if i = Array.length states - 1 then abort "no ready state"
+    else aux (i+1)
+  in
+  aux 0
+
+let rec run_all () =
+  let state = find_ready () in
+  run state;
+  if state.status = Done && state.pid = Array.length states - 1
+  then match state.last_output with
+    | Some out -> out
+    | None -> abort "no output from final process!"
+  else run_all ()
 
 let run_with coeffs =
   debug "RESET\n\n";
@@ -179,7 +201,7 @@ let run_with coeffs =
   List.iteri (fun i coeff -> debug "coeff %d in %d\n" coeff i;
                Queue.add coeff states.(i).input) coeffs;
   Queue.add 0 states.(0).input;
-  run 0
+  run_all ()
 
 let coeffs = List.init 5 (fun x -> x+5)
 
