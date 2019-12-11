@@ -1,0 +1,15 @@
+(executable (name mainA)
+ (modes byte exe)
+ (modules MainA))
+
+(rule (alias runA)
+ (deps input.txt)
+ (action (run ./mainA.exe)))
+
+(executable (name mainB)
+ (modes byte exe)
+ (modules MainB))
+
+(rule (alias runB)
+ (deps input.txt)
+ (action (run ./mainB.exe)))
