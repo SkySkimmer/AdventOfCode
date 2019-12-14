@@ -6,10 +6,15 @@
  (deps input.txt)
  (action (run ./mainA.exe)))
 
-; (executable (name mainB)
-;  (modes byte exe)
-;  (modules MainB))
+(executable (name mainB)
+ (modes byte exe)
+ (modules MainB)
+ (libraries unix))
 
-; (rule (alias runB)
-;  (deps input.txt)
-;  (action (run ./mainB.exe)))
+(rule (alias buildB)
+ (deps mainB.exe)
+ (action (run true)))
+
+(rule (alias runB)
+ (deps input.txt)
+ (action (run ./mainB.exe)))
