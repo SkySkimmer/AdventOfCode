@@ -2,3 +2,8 @@
  (modes byte exe)
  (libraries str)
  (modules MainA))
+
+(executable (name mainB)
+ (modes byte exe)
+ (libraries str)
+ (modules MainB))
