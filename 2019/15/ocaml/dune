@@ -3,7 +3,7 @@
  (libraries unix)
  (modules MainA))
 
-; (executable (name mainB)
-;  (modes byte exe)
-;  (libraries str)
-;  (modules MainB))
+(executable (name mainB)
+ (modes byte exe)
+ (libraries unix)
+ (modules MainB))
