@@ -74,8 +74,10 @@ let rec sum f a b acc =
   if a = b then acc
   else sum f (a+1) b ((acc + f a) mod 10)
 
+let bimods = Array.init (fulllen - offset) (fun j -> bimod10 (repeat - 1 + j) j)
+
 let digits = Array.init 8 (fun i ->
     let i = offset + i in
-    sum (fun j -> l0.((i+j) mod len) * bimod10 (repeat - 1 + j) j) 0 (fulllen - i) 0)
+    sum (fun j -> l0.((i+j) mod len) * bimods.(j)) 0 (fulllen - i) 0)
 
 let () = Array.iter print_int digits; print_newline()
