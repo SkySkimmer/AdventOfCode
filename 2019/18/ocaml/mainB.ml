@@ -144,15 +144,11 @@ let allkeys = (1 lsl nkeys) - 1
 let (>>=) a f =
   List.concat (List.rev_map f a)
 
-let rec replace_nth l i v =
-  match l with
-  | _ :: rest when i = 0 -> v :: rest
-  | x :: rest -> x :: replace_nth rest (i-1) v
-  | [] -> abort "bad replace\n"
+let replace_nth l i v = Array.mapi (fun j vj -> if i = j then v else vj) l
 
 let possible_moves bots keys =
   List.init 4 (fun i -> i) >>= fun i ->
-  let bot = List.nth bots i in
+  let bot = bots.(i) in
   dists.(bot) |> List.filter (fun (target,(_,doors)) ->
       not (getbit keys target) && imply_bits doors keys)
   |> List.map (fun (target,(cost,_)) ->
@@ -161,9 +157,31 @@ let possible_moves bots keys =
 
 let ppint ch i = Format.fprintf ch "%d" i
 
-module PSet = Set.Make(struct type t = int list * int let compare = compare end)
+module PSet = Set.Make(struct type t = int array * int let compare = compare end)
+
+type pview = Empty | Node of {l:pview; v:PSet.elt; r:pview; h:int}
+
+(* mem p set iff there is an element of set which has the same bots and has better keys
+   NB: better keys are always >= as ints *)
+let rec mem (bots,keys as x) = function
+  | Empty -> false
+  | Node {l;v=(bots',keys');r;_} ->
+    let c = compare bots bots' in
+    if c < 0 then mem x l
+    else if c > 0 then mem x r
+    else if imply_bits keys keys' then true
+    else let c = compare keys keys' in
+      if c < 0 then mem x l
+      else mem x r
+
+let mem x (set:PSet.t) = mem x (Obj.magic set)
+
+let insert bots keys points = (bots,keys) :: (List.filter (fun (bots',keys') ->
+    not (bots = bots' && imply_bits keys' keys))
+    points)
+
 let cost =
-  let work = ref (IntMap.singleton 0 [List.init 4 (fun i -> i + nkeys),0]) in
+  let work = ref (IntMap.singleton 0 [Array.init 4 (fun i -> i + nkeys),0]) in
   let visited = ref PSet.empty in
   let exception Found of int in
   let rec aux () =
@@ -172,16 +190,15 @@ let cost =
     | Some (cost,points) ->
       work := IntMap.remove cost !work;
       points |> List.iter (fun (bots,keys as p) ->
-          if PSet.mem p !visited then ()
+          if mem p !visited then ()
           else begin
             visited := PSet.add p !visited;
-            debug 1 "visited %a\n" (prlist ppint ",") (fst p);
             if keys = allkeys then raise (Found cost);
             possible_moves bots keys |> List.iter (fun (bots,keys,mcost) ->
                 let cost = cost + mcost in
                 work := !work |> IntMap.update cost (function
                     | None -> Some [bots,keys]
-                    | Some points -> Some ((bots,keys) :: points)))
+                    | Some points -> Some (insert bots keys points)))
           end);
       aux ()
   in
