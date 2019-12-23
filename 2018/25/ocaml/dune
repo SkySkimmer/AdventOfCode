@@ -1,7 +1,10 @@
-(executable (name main)
+(executable
+ (name main)
  (flags :standard -rectypes)
  (libraries coq.clib))
 
-(rule (alias runme)
+(rule
+ (alias runme)
  (deps input.txt)
- (action (run ./main.exe)))
+ (action
+  (run ./main.exe)))

@@ -1,8 +1,7 @@
-
 let rec parse_lines acc ch =
   match Scanf.bscanf ch "%d\n" (fun x -> x) with
   | exception _ -> acc
-  | x -> parse_lines (acc+x) ch
+  | x -> parse_lines (acc + x) ch
 
 let res =
   let input = Scanf.Scanning.open_in "input.txt" in

@@ -10,31 +10,32 @@ type vec = { x : int; y : int }
 
 let rec load_astra pos nastra astra ch =
   match input_char ch with
-  | exception End_of_file -> astra, nastra
-  | '\n' -> load_astra {x = 0; y = pos.y + 1} nastra astra ch
-  | '.' -> load_astra {x=pos.x + 1; y = pos.y} nastra astra ch
-  | '#' -> load_astra {x=pos.x + 1; y = pos.y} (nastra+1) (pos::astra) ch
+  | exception End_of_file -> (astra, nastra)
+  | '\n' -> load_astra { x = 0; y = pos.y + 1 } nastra astra ch
+  | '.' -> load_astra { x = pos.x + 1; y = pos.y } nastra astra ch
+  | '#' ->
+    load_astra { x = pos.x + 1; y = pos.y } (nastra + 1) (pos :: astra) ch
   | c -> abort "unknown symbol %c\n" c
 
 let astra, nastra =
   let input = open_in "input.txt" in
-  let r = load_astra {x=0;y=0} 0 [] input in
+  let r = load_astra { x = 0; y = 0 } 0 [] input in
   close_in input;
   r
 
 let () = debug "%d asteroids\n" nastra
 
-let vdiff a b = {x = a.x - b.x; y = a.y - b.y}
+let vdiff a b = { x = a.x - b.x; y = a.y - b.y }
 
 let sign n = compare n 0
 
 let same_direction a b =
-  sign a.x = sign b.x && sign a.y = sign b.y &&
-  a.y * b.x = b.y * a.x
+  sign a.x = sign b.x && sign a.y = sign b.y && a.y * b.x = b.y * a.x
 
-let mk x y = {x;y}
+let mk x y = { x; y }
 
-let () = debug "true=%b false=%b false=%b false=%b\n"
+let () =
+  debug "true=%b false=%b false=%b false=%b\n"
     (same_direction (mk 0 1) (mk 0 2))
     (same_direction (mk 0 (-1)) (mk 0 2))
     (same_direction (mk 0 1) (mk 1 2))
@@ -48,10 +49,10 @@ let is_hid base seen other =
 let rec best_count_hidden best hid seen base = function
   | [] -> hid
   | other :: rest ->
-    if is_hid base seen other
-    then if hid+1 = best then best
-      else best_count_hidden best (hid+1) seen base rest
-    else best_count_hidden best hid (other::seen) base rest
+    if is_hid base seen other then
+      if hid + 1 = best then best
+      else best_count_hidden best (hid + 1) seen base rest
+    else best_count_hidden best hid (other :: seen) base rest
 
 let rec find_best best = function
   | [] -> best

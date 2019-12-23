@@ -1,4 +1,3 @@
-
 let debug m = if false then Printf.eprintf m else Printf.ifprintf stderr m
 
 let abort m = Printf.kfprintf (fun _ -> exit 1) stderr m
@@ -16,24 +15,31 @@ let () = debug "%d cells\n" (Array.length start_state)
 
 type status = Ready | Waiting | Done
 
-type state = { mem : int array; pid : int; mutable pc : int; mutable status : status;
-               input : int Queue.t; mutable last_output : int option; }
+type state = {
+  mem : int array;
+  pid : int;
+  mutable pc : int;
+  mutable status : status;
+  input : int Queue.t;
+  mutable last_output : int option;
+}
 
 let reset_state pid =
-  { mem = Array.copy start_state;
+  {
+    mem = Array.copy start_state;
     pid;
     status = Ready;
     pc = 0;
     input = Queue.create ();
-    last_output = None;}
+    last_output = None;
+  }
 
 let states = Array.init 5 reset_state
 
 let state_mod i = states.(i mod Array.length states)
 
-let reset_states () = Array.iteri (fun pid _ ->
-    states.(pid) <- reset_state pid)
-    states
+let reset_states () =
+  Array.iteri (fun pid _ -> states.(pid) <- reset_state pid) states
 
 let incr_pc state = state.pc <- state.pc + 1
 
@@ -42,19 +48,19 @@ type mode = Position | Immediate
 let get state ~mode =
   let imm = state.mem.(state.pc) in
   incr_pc state;
-  let v = match mode with
-    | Immediate -> imm
-    | Position -> state.mem.(imm)
-  in
+  let v = match mode with Immediate -> imm | Position -> state.mem.(imm) in
   debug "read %d\n" v;
   v
 
-let set state ~mode v = debug "setting %d\n" v; match mode with
+let set state ~mode v =
+  debug "setting %d\n" v;
+  match mode with
   | Immediate -> abort "bad mode at pc %d\n" state.pc
-  | Position -> state.mem.(state.mem.(state.pc)) <- v; incr_pc state
+  | Position ->
+    state.mem.(state.mem.(state.pc)) <- v;
+    incr_pc state
 
-type ops = Exit | Add | Mult | Input | Output
-         | JumpNZ | JumpZ | Lt | Eq
+type ops = Exit | Add | Mult | Input | Output | JumpNZ | JumpZ | Lt | Eq
 
 let string_of_op = function
   | Exit -> "Exit"
@@ -90,20 +96,20 @@ let parse_modes state =
     if i = 0 then List.rev acc
     else aux (parse_mode state (i mod 10) :: acc) (i / 10)
   in
-  fun i -> aux [] (i/100)
+  fun i -> aux [] (i / 100)
 
-let popmode modes = match !modes with
+let popmode modes =
+  match !modes with
   | [] -> Position
-  | mode :: tl -> modes := tl; mode
+  | mode :: tl ->
+    modes := tl;
+    mode
 
-let getm state modes =
-  get ~mode:(popmode modes) state
+let getm state modes = get ~mode:(popmode modes) state
 
-let setm state modes v =
-  set state ~mode:(popmode modes) v
+let setm state modes v = set state ~mode:(popmode modes) v
 
-let parse_opcode state i =
-  parse_modes state i, parse_instr state i
+let parse_opcode state i = (parse_modes state i, parse_instr state i)
 
 let do_add state modes =
   let a = getm state modes in
@@ -117,7 +123,10 @@ let do_mult state modes =
 
 let do_input state modes =
   match Queue.take state.input with
-  | exception Queue.Empty -> ignore (popmode modes); state.status <- Waiting; state.pc <- state.pc - 1
+  | exception Queue.Empty ->
+    ignore (popmode modes);
+    state.status <- Waiting;
+    state.pc <- state.pc - 1
   | v -> setm state modes v
 
 let do_output state modes =
@@ -149,8 +158,7 @@ let do_eq state modes =
   let v = if a = b then 1 else 0 in
   setm state modes v
 
-let do_exit state _modes =
-  state.status <- Done
+let do_exit state _modes = state.status <- Done
 
 let finish () =
   try Queue.take states.(0).input
@@ -158,21 +166,23 @@ let finish () =
 
 (* run until we need more input *)
 let rec run state =
-  let pc = state.pc in (* for error reporting *)
+  let pc = state.pc in
+  (* for error reporting *)
   debug "prep to exec at %d in %d\n" pc state.pid;
   let modes, code = parse_opcode state (get state ~mode:Immediate) in
   debug "exec %s\n" (string_of_op code);
   let modes = ref modes in
-  let exec = match code with
-  | Add -> do_add
-  | Mult -> do_mult
-  | Input -> do_input
-  | Output -> do_output
-  | JumpNZ -> do_jumpnz
-  | JumpZ -> do_jumpz
-  | Lt -> do_lt
-  | Eq -> do_eq
-  | Exit -> do_exit
+  let exec =
+    match code with
+    | Add -> do_add
+    | Mult -> do_mult
+    | Input -> do_input
+    | Output -> do_output
+    | JumpNZ -> do_jumpnz
+    | JumpZ -> do_jumpz
+    | Lt -> do_lt
+    | Eq -> do_eq
+    | Exit -> do_exit
   in
   exec state modes;
   abort_unless (!modes = []) "too many modes at pc %d\n" pc;
@@ -182,15 +192,15 @@ let find_ready () =
   let rec aux i =
     if states.(i).status = Ready then states.(i)
     else if i = Array.length states - 1 then abort "no ready state"
-    else aux (i+1)
+    else aux (i + 1)
   in
   aux 0
 
 let rec run_all () =
   let state = find_ready () in
   run state;
-  if state.status = Done && state.pid = Array.length states - 1
-  then match state.last_output with
+  if state.status = Done && state.pid = Array.length states - 1 then
+    match state.last_output with
     | Some out -> out
     | None -> abort "no output from final process!"
   else run_all ()
@@ -198,19 +208,23 @@ let rec run_all () =
 let run_with coeffs =
   debug "RESET\n\n";
   reset_states ();
-  List.iteri (fun i coeff -> debug "coeff %d in %d\n" coeff i;
-               Queue.add coeff states.(i).input) coeffs;
+  List.iteri
+    (fun i coeff ->
+      debug "coeff %d in %d\n" coeff i;
+      Queue.add coeff states.(i).input)
+    coeffs;
   Queue.add 0 states.(0).input;
   run_all ()
 
-let coeffs = List.init 5 (fun x -> x+5)
+let coeffs = List.init 5 (fun x -> x + 5)
 
 let rec all_insert acc stack x = function
-  | [] -> (List.rev_append stack [x]) :: acc
-  | y :: tl -> all_insert ((List.rev_append stack (x :: y :: tl)) :: acc) (y::stack) x tl
+  | [] -> List.rev_append stack [ x ] :: acc
+  | y :: tl ->
+    all_insert (List.rev_append stack (x :: y :: tl) :: acc) (y :: stack) x tl
 
 let rec permut = function
-  | [] -> [[]]
+  | [] -> [ [] ]
   | x :: rest ->
     let rest = permut rest in
     List.flatten (List.map (fun p -> all_insert [] [] x p) rest)

@@ -1,4 +1,3 @@
-
 type program
 
 val input_program : in_channel -> program
@@ -11,10 +10,7 @@ val make_state : ?memsize:int -> program -> state
 (** If given explicitly memsize should be at least the size of the
    program. *)
 
-type status =
-  | WaitInput of (int -> unit)
-  | HaveOutput of int
-  | Done
+type status = WaitInput of (int -> unit) | HaveOutput of int | Done
 
 val run : state -> status
 (** Run the program until an input or output instruction. The closure

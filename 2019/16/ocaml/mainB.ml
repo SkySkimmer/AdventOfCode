@@ -1,7 +1,4 @@
-
-let debugging = match Sys.argv with
-  | [|_;"-debug"|] -> true
-  | _ -> false
+let debugging = match Sys.argv with [| _; "-debug" |] -> true | _ -> false
 
 let debug m = if debugging then Printf.eprintf m else Printf.ifprintf stderr m
 
@@ -16,7 +13,9 @@ let l0 =
   l
 
 let offset = int_of_string (String.sub l0 0 7)
-let l0 = Array.init (String.length l0) (fun i -> int_of_string (String.make 1 (String.get l0 i)))
+
+let l0 =
+  Array.init (String.length l0) (fun i -> int_of_string (String.make 1 l0.[i]))
 
 (* input length is 650 -> repeat 10k: len=6.5M
    first 7 digits are idx=5979673 (a bit less than 6M)
@@ -53,31 +52,31 @@ let l0 = Array.init (String.length l0) (fun i -> int_of_string (String.make 1 (S
    let's be honest at this point I'm just translating python to ocaml
 *)
 
-let rec binom n k =
-  if k = 0 then 1
-  else n * binom (n-1) (k-1) / k
+let rec binom n k = if k = 0 then 1 else n * binom (n - 1) (k - 1) / k
 
 let rec biprime n k p =
   if k = 0 then 1
-  else if n < p && k < p then (binom n k) mod p
-  else (biprime (n / p) (k / p) p * biprime (n mod p) (k mod p) p) mod p
+  else if n < p && k < p then binom n k mod p
+  else biprime (n / p) (k / p) p * biprime (n mod p) (k mod p) p mod p
 
-let bimod10 n k =
-  ((biprime n k 2) * 5 + (biprime n k 5) * 6) mod 10
+let bimod10 n k = ((biprime n k 2 * 5) + (biprime n k 5 * 6)) mod 10
 
 let len = Array.length l0
+
 let fulllen = len * 10_000
 
 let repeat = 100
 
 let rec sum f a b acc =
-  if a = b then acc
-  else sum f (a+1) b ((acc + f a) mod 10)
+  if a = b then acc else sum f (a + 1) b ((acc + f a) mod 10)
 
 let bimods = Array.init (fulllen - offset) (fun j -> bimod10 (repeat - 1 + j) j)
 
-let digits = Array.init 8 (fun i ->
-    let i = offset + i in
-    sum (fun j -> l0.((i+j) mod len) * bimods.(j)) 0 (fulllen - i) 0)
+let digits =
+  Array.init 8 (fun i ->
+      let i = offset + i in
+      sum (fun j -> l0.((i + j) mod len) * bimods.(j)) 0 (fulllen - i) 0)
 
-let () = Array.iter print_int digits; print_newline()
+let () =
+  Array.iter print_int digits;
+  print_newline ()

@@ -1,19 +1,17 @@
-
 module P = struct
   type t = int * int * int * int
 
   let compare : t -> t -> int = compare
 end
 
-module S = Set.Make(P)
-module M = Map.Make(P)
-
+module S = Set.Make (P)
+module M = Map.Make (P)
 module UF = Unionfind.Make (S) (M)
 
 let rec parse_lines acc ch =
-  match Scanf.bscanf ch "%d,%d,%d,%d\n" (fun a b c d -> a,b,c,d) with
+  match Scanf.bscanf ch "%d,%d,%d,%d\n" (fun a b c d -> (a, b, c, d)) with
   | exception _ -> acc
-  | p -> parse_lines (p::acc) ch
+  | p -> parse_lines (p :: acc) ch
 
 let points =
   let input = Scanf.Scanning.open_in "input.txt" in
@@ -21,7 +19,7 @@ let points =
   Scanf.Scanning.close_in input;
   points
 
-let close (a,b,c,d) (a',b',c',d') =
+let close (a, b, c, d) (a', b', c', d') =
   abs (a - a') + abs (b - b') + abs (c - c') + abs (d - d') <= 3
 
 let rec link uf p = function

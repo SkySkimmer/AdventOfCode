@@ -1,9 +1,11 @@
-(executable (name mainA)
+(executable
+ (name mainA)
  (modes byte exe)
  (libraries str)
  (modules MainA))
 
-(executable (name mainB)
+(executable
+ (name mainB)
  (modes byte exe)
  (libraries str)
  (modules MainB))

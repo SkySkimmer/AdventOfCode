@@ -1,10 +1,8 @@
-
 let debug m = if false then Printf.eprintf m else Printf.ifprintf stderr m
 
 let abort m = Printf.kfprintf (fun _ -> exit 1) stderr m
 
 let abort_unless b m = if not b then abort m else Printf.ifprintf stderr m
-
 
 (* The version in mainA fails to parse the last int. Apparently that's
    not a problem for part A. *)
@@ -18,8 +16,8 @@ let state =
 let pc = ref 0
 
 type mode = Position | Immediate
-type ops = Exit | Add | Mult | Input | Output
-         | JumpNZ | JumpZ | Lt | Eq
+
+type ops = Exit | Add | Mult | Input | Output | JumpNZ | JumpZ | Lt | Eq
 
 let string_of_op = function
   | Exit -> "Exit"
@@ -35,16 +33,17 @@ let string_of_op = function
 let get ~mode () =
   let imm = state.(!pc) in
   incr pc;
-  let v = match mode with
-    | Immediate -> imm
-    | Position -> state.(imm)
-  in
+  let v = match mode with Immediate -> imm | Position -> state.(imm) in
   debug "load %d\n" v;
   v
 
-let set ~mode v = debug "set %d\n" v; match mode with
+let set ~mode v =
+  debug "set %d\n" v;
+  match mode with
   | Immediate -> abort "bad mode at pc %d\n" !pc
-  | Position -> state.(state.(!pc)) <- v; incr pc
+  | Position ->
+    state.(state.(!pc)) <- v;
+    incr pc
 
 let parse_instr i =
   match i mod 100 with
@@ -66,23 +65,22 @@ let parse_mode = function
 
 let parse_modes =
   let rec aux acc i =
-    if i = 0 then List.rev acc
-    else aux (parse_mode (i mod 10) :: acc) (i / 10)
+    if i = 0 then List.rev acc else aux (parse_mode (i mod 10) :: acc) (i / 10)
   in
-  fun i -> aux [] (i/100)
+  fun i -> aux [] (i / 100)
 
-let popmode modes = match !modes with
+let popmode modes =
+  match !modes with
   | [] -> Position
-  | mode :: tl -> modes := tl; mode
+  | mode :: tl ->
+    modes := tl;
+    mode
 
-let getm modes () =
-  get ~mode:(popmode modes) ()
+let getm modes () = get ~mode:(popmode modes) ()
 
-let setm modes v =
-  set ~mode:(popmode modes) v
+let setm modes v = set ~mode:(popmode modes) v
 
-let parse_opcode i =
-  parse_modes i, parse_instr i
+let parse_opcode i = (parse_modes i, parse_instr i)
 
 let do_add modes =
   let a = getm modes () in
@@ -125,26 +123,27 @@ let do_eq modes =
   setm modes v
 
 let rec run () =
-  let pc = !pc in (* for error reporting *)
+  let pc = !pc in
+  (* for error reporting *)
   debug "prep to exec at %d\n" pc;
   let modes, code = parse_opcode (get ~mode:Immediate ()) in
   debug "exec %s\n" (string_of_op code);
   let modes = ref modes in
-  let exec = match code with
-  | Add -> do_add
-  | Mult -> do_mult
-  | Input -> do_input
-  | Output -> do_output
-  | JumpNZ -> do_jumpnz
-  | JumpZ -> do_jumpz
-  | Lt -> do_lt
-  | Eq -> do_eq
-  | Exit -> ignore
+  let exec =
+    match code with
+    | Add -> do_add
+    | Mult -> do_mult
+    | Input -> do_input
+    | Output -> do_output
+    | JumpNZ -> do_jumpnz
+    | JumpZ -> do_jumpz
+    | Lt -> do_lt
+    | Eq -> do_eq
+    | Exit -> ignore
   in
   exec modes;
   abort_unless (!modes = []) "too many modes at pc %d\n" pc;
-  if code = Exit then ()
-  else run ()
+  if code = Exit then () else run ()
 
 let () = debug "%d cells\n" (Array.length state)
 

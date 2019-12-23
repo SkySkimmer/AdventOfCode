@@ -1,7 +1,9 @@
-(executable (name mainA)
+(executable
+ (name mainA)
  (modes byte exe)
  (modules MainA))
 
-(executable (name mainB)
+(executable
+ (name mainB)
  (modes byte exe)
  (modules MainB))
