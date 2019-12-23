@@ -18,3 +18,10 @@ let rec prlist pr sep ch = function
     pr ch x;
     Format.fprintf ch sep;
     prlist pr sep ch rest
+
+let rec input_lines_aux ch acc =
+  match input_line ch with
+  | exception _ -> acc
+  | l -> input_lines_aux ch (l::acc)
+
+let input_lines ch = List.rev (input_lines_aux ch [])

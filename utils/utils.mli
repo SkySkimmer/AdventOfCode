@@ -16,3 +16,5 @@ val prlist :
   Format.formatter ->
   'a list ->
   unit
+
+val input_lines : in_channel -> string list
