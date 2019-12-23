@@ -1,7 +1,9 @@
 (executable (name mainA)
+ (libraries intcode)
  (modes byte exe)
  (modules MainA))
 
 (executable (name mainB)
+ (libraries intcode)
  (modes byte exe)
  (modules MainB))
