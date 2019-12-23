@@ -1,4 +1,4 @@
-open Utils
+open Utils.Util
 
 module IntSet = Set.Make (struct
   type t = int

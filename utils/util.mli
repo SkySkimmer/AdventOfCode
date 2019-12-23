@@ -18,3 +18,7 @@ val prlist :
   unit
 
 val input_lines : in_channel -> string list
+
+module IntSet : Set.S with type elt = int
+
+module IntMap : Map.S with type key = int

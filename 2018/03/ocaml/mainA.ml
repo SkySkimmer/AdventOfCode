@@ -1,4 +1,4 @@
-open Utils
+open Utils.Util
 
 let tiles = Array.init 1000 (fun _ -> Array.make 1000 0)
 

@@ -1,4 +1,4 @@
-open Utils
+open Utils.Util
 
 let start_state =
   let input = open_in "../input.txt" in

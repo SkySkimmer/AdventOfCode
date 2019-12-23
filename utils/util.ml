@@ -22,6 +22,15 @@ let rec prlist pr sep ch = function
 let rec input_lines_aux ch acc =
   match input_line ch with
   | exception _ -> acc
-  | l -> input_lines_aux ch (l::acc)
+  | l -> input_lines_aux ch (l :: acc)
 
 let input_lines ch = List.rev (input_lines_aux ch [])
+
+module Int = struct
+  type t = int
+
+  external compare : int -> int -> int = "%compare"
+end
+
+module IntSet = Set.Make (Int)
+module IntMap = Map.Make (Int)
