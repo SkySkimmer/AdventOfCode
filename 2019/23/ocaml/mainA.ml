@@ -1,7 +1,7 @@
 open Utils
 
 let start_state =
-  let input = open_in "input.txt" in
+  let input = open_in "../input.txt" in
   let r = Intcode.input_program input in
   close_in input;
   r
