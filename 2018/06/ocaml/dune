@@ -4,7 +4,8 @@
  (modes byte exe)
  (modules MainA))
 
-; (executable
-;  (name mainB)
-;  (modes byte exe)
-;  (modules MainB))
+(executable
+ (name mainB)
+ (libraries utils)
+ (modes byte exe)
+ (modules MainB))
