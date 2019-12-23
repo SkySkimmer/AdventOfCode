@@ -2,7 +2,7 @@ let abort m = Printf.kfprintf (fun _ -> exit 1) stderr m
 
 let abort_unless b m = if not b then abort m else Printf.ifprintf stderr m
 
-let debug = ref false
+let debug = ref (Utils.debugging >= 3)
 
 type program = int array
 

@@ -18,4 +18,5 @@ val run : state -> status
    again. *)
 
 val debug : bool ref
-(** Print debug info (what instructions get run, etc) if set to [true]. *)
+(** Print debug info (what instructions get run, etc) if set to [true].
+    Default is [Utils.debugging >= 3]. *)
