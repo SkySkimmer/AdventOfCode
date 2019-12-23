@@ -1,0 +1,10 @@
+(executable
+ (name mainA)
+ (libraries utils)
+ (modes byte exe)
+ (modules MainA))
+
+; (executable
+;  (name mainB)
+;  (modes byte exe)
+;  (modules MainB))
