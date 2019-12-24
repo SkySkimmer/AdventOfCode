@@ -1,3 +1,8 @@
 (library
  (name intcode)
- (libraries utils))
+ (libraries utils)
+ (modules :standard \ runner))
+
+(executable (name runner)
+ (modules runner)
+ (libraries intcode))

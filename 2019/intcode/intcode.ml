@@ -171,6 +171,18 @@ let do_baseoffset state modes =
 
 let do_exit _state _modes = Some Done
 
+let exec = function
+  | Add -> do_add
+  | Mult -> do_mult
+  | Input -> do_input
+  | Output -> do_output
+  | JumpNZ -> do_jumpnz
+  | JumpZ -> do_jumpz
+  | Lt -> do_lt
+  | Eq -> do_eq
+  | BaseOffset -> do_baseoffset
+  | Exit -> do_exit
+
 (* run until we need more input *)
 let rec run state =
   let pc = state.pc in
@@ -179,19 +191,6 @@ let rec run state =
   let modes, code = parse_opcode state (get state ~mode:Immediate) in
   if !debug then Printf.printf "exec %s\n" (string_of_op code);
   let modes = ref modes in
-  let exec =
-    match code with
-    | Add -> do_add
-    | Mult -> do_mult
-    | Input -> do_input
-    | Output -> do_output
-    | JumpNZ -> do_jumpnz
-    | JumpZ -> do_jumpz
-    | Lt -> do_lt
-    | Eq -> do_eq
-    | BaseOffset -> do_baseoffset
-    | Exit -> do_exit
-  in
-  let status = exec state modes in
+  let status = exec code state modes in
   abort_unless (!modes = []) "too many modes at pc %d\n" pc;
   match status with None -> run state | Some status -> status
