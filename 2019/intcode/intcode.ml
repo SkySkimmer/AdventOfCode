@@ -15,7 +15,7 @@ let input_program input =
 
 type state = { mem : int array; mutable pc : int; mutable relative_base : int }
 
-type status = WaitInput of (int -> unit) | HaveOutput of int | Done
+type 'a status = WaitInput of ('a -> unit) | HaveOutput of 'a | Done
 
 let make_state ?memsize program =
   let mem =
@@ -194,3 +194,9 @@ let rec run state =
   let status = exec code state modes in
   abort_unless (!modes = []) "too many modes at pc %d\n" pc;
   match status with None -> run state | Some status -> status
+
+let run_ascii state =
+  match run state with
+  | Done -> Done
+  | HaveOutput o -> HaveOutput (char_of_int o)
+  | WaitInput k -> WaitInput (fun c -> k (int_of_char c))

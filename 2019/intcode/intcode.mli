@@ -10,12 +10,15 @@ val make_state : ?memsize:int -> program -> state
 (** If given explicitly memsize should be at least the size of the
    program. *)
 
-type status = WaitInput of (int -> unit) | HaveOutput of int | Done
+type 'a status = WaitInput of ('a -> unit) | HaveOutput of 'a | Done
 
-val run : state -> status
+val run : state -> int status
 (** Run the program until an input or output instruction. The closure
    in [WaitInput] should be called exactly once before calling [run]
    again. *)
+
+val run_ascii : state -> char status
+(** Like [run] but converts output and output to ASCII char codes. *)
 
 val debug : bool ref
 (** Print debug info (what instructions get run, etc) if set to [true].
