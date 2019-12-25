@@ -20,11 +20,12 @@ let string_of_output o =
 
 let rec main () =
   match Intcode.run state with
-  | Done -> ()
+  | Done -> flush stdout
   | HaveOutput o ->
     print_string (string_of_output o);
     main ()
   | WaitInput k ->
+    flush stdout;
     let c = input_char stdin in
     k (int_of_char c);
     main ()
