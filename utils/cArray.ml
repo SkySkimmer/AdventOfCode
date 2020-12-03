@@ -605,3 +605,18 @@ module Fun1 = struct
       else ar
   end
 end
+
+let map_of_list f l =
+  let len = List.length l in
+  let rec fill i v = function
+    | [] -> ()
+    | x :: l ->
+      Array.unsafe_set v i (f x);
+      fill (succ i) v l
+  in
+  match l with
+  | [] -> [||]
+  | x :: l ->
+    let ans = Array.make len (f x) in
+    let () = fill 1 ans l in
+    ans

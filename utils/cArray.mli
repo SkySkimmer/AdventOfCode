@@ -182,3 +182,5 @@ module Fun1 : sig
     (** [Fun1.Smart.map f x v = Smart.map (f x) v] *)
   end
 end
+
+val map_of_list : ('a -> 'b) -> 'a list -> 'b array
